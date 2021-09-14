@@ -75,7 +75,7 @@ class agente:
             columna3_v1 = new_posiciones[0][2] == jugador and new_posiciones[1][2] == jugador and new_posiciones[2][2] == (vacio or competidor)
             columna3_v2 = new_posiciones[0][2] == (vacio or competidor) and new_posiciones[1][2] == jugador and new_posiciones[2][2] == jugador
     
-            #Ganadores: que completan fila, columna o diagonal
+            #2- Ganadores: que completan fila, columna o diagonal
             fila1 = new_posiciones[0][0] == jugador and new_posiciones[0][1] == jugador and new_posiciones[0][2] == jugador
             fila2 = new_posiciones[1][0] == jugador and new_posiciones[1][1] == jugador and new_posiciones[1][2] == jugador
             fila3 = new_posiciones[2][0] == jugador and new_posiciones[2][1] == jugador and new_posiciones[2][2] == jugador
@@ -87,7 +87,7 @@ class agente:
             diagonal1 = new_posiciones[0][0] == jugador and new_posiciones[1][1] == jugador and new_posiciones[2][2] == jugador
             diagonal2 = new_posiciones[2][0] == jugador and new_posiciones[1][1] == jugador and new_posiciones[0][2] == jugador
     
-            #Que evitan que el otro rellene su linea
+            #3- Que evitan que el otro rellene su linea
             fila1_competidor = new_posiciones[0].count(competidor) == 2 and new_posiciones[0].count(jugador) == 1
             fila2_competidor = new_posiciones[1].count(competidor) == 2 and new_posiciones[1].count(jugador) == 1
             fila3_competidor = new_posiciones[2].count(competidor) == 2 and new_posiciones[2].count(jugador) == 1
@@ -145,13 +145,225 @@ class agente:
 # In[3]:
 
 
-agente.next_move(tablero = [['x', '.', 'x'], ['.', 'o', 'o'], ['.', '.', '.']], competidor = "o", jugador = "x", 
-                 ponderaciones = [1,5,4])
+agente.next_move(tablero = [['x', '.', 'o'], ['.', 'x', '.'], ['.', '.', 'o']], competidor = "o", jugador = "x", 
+                 ponderaciones = [1,1,1])
+
+
+# ## Algoritmo Genético
+# 
+# Acá voy a desarrollar un algoritmo genético basado en el que encontramos acá: https://github.com/ahmedfgad/GeneticAlgorithmPython/tree/master/Tutorial%20Project
+# 
+# En un segundo paso deberíamos crear más funciones de fitness, agregarle criterios de selección, etc. como la consigna requiere.
+
+# #### Población inicial
+
+# In[4]:
+
+
+num_alpha = 3
+sol_per_pop = 100
+#Creamos la población inicial, con los distintos alfa para las distintas características
+# Definimos el tamaño de la población.
+pop_size = (sol_per_pop,num_alpha) 
+new_population = np.random.uniform(low=-4.0, high=4.0,size=pop_size)
+new_population
 
 
 # In[5]:
 
 
+#Creamos los puntajes correspondientes a las 3 características
+#1- Cantidad de grupos de 2 cruces consecutivas #Dos por fila/columna
+#2- Ganadores: que completan fila, columna o diagonal
+#3- Que evitan que el otro rellene su linea
+equation_inputs = [10,50,30]
+
+
+# ### Definición de Funciones
+
+# #### Fitness
+# 
+# En primer lugar vamos a definir las distintas funciones de fitness a utilizar. Comenzaremos por tomar a la función objetivo como primer opción.
+
+# In[6]:
+
+
+def pop_fitness(equation_inputs, population):
+    fitness = np.sum(population*equation_inputs, axis=1)
+    return fitness
+
+
+# In[7]:
+
+
+fitness = pop_fitness(equation_inputs,new_population)
+fitness
+
+
+# #### De selección
+
+# In[8]:
+
+
+# A continuación elegimos a la cantidad que queremos de individuos de la generación actual para que sean "padres" de la siguiente.
+# Estos van a ser los individuos con mayor puntaje en el fitness calculado en la función anterior.
+
+def select_mating_pool(pop, fitness, num_parents):
+    parents = np.empty((num_parents, pop.shape[1]))
+    for parent_num in range(num_parents):
+        max_fitness_idx = np.where(fitness == np.max(fitness))
+        max_fitness_idx = max_fitness_idx[0][0]
+        parents[parent_num, :] = pop[max_fitness_idx, :]
+        fitness[max_fitness_idx] = -99999999999
+    return parents
+
+
+# In[9]:
+
+
+parents = select_mating_pool(new_population, fitness, 4)
+parents
+
+
+# #### Crossover
+
+# In[10]:
+
+
+#Hacemos un crossover intercambiando características entre sí y de esta manera creamos nuevos individuos
+
+def crossover(parents, offspring_size):
+    #ACA VER: QUIERO SOLO QUEDARME CON LOS CROSSOVER O CON LOS ORIGINALES TAMBIEN? MEDIO QUE ACUMULARIA VARIABLES
+    #offspring = np.empty((offspring_size[0]+parents.shape[0], offspring_size[1]))
+    offspring = np.empty(offspring_size)
+    # The point at which crossover takes place between two parents. Usually, it is at the center.
+    crossover_point = np.uint8(offspring_size[1]/2)
+
+    for k in range(offspring_size[0]):
+        # Index of the first parent to mate.
+        parent1_idx = k%parents.shape[0]
+        # Index of the second parent to mate.
+        parent2_idx = (k+1)%parents.shape[0]
+        # The new offspring will have its first half of its genes taken from the first parent.
+        offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point]
+        # The new offspring will have its second half of its genes taken from the second parent.
+        offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:]
+        
+    return offspring
+
+
+# In[11]:
+
+
+offspring_crossover = crossover(parents,offspring_size=(pop_size[0]-parents.shape[0], num_alpha))
+offspring_crossover
+
+
+# In[12]:
+
+
+#a = crossover(parents =  parents, offspring_size=(3, num_alpha))
+#for k in range(offspring_size[0], parents.shape[0]+offspring_size[0]):
+#    a[k] = parents[k-offspring_size[0]]
+
+#print(a)
+#print(parents)
+
+
+# #### Mutación
+
+# In[13]:
+
+
+#Una mutación intercambia una pequeña proporción de características del gen.
+
+def mutation(offspring_crossover, num_mutations=1):
+    mutations_counter = np.uint8(offspring_crossover.shape[1] / num_mutations)
+    # Mutation changes a number of genes as defined by the num_mutations argument. The changes are random.
+    for idx in range(offspring_crossover.shape[0]):
+        gene_idx = mutations_counter - 1
+        for mutation_num in range(num_mutations):
+            # The random value to be added to the gene.
+            random_value = np.random.uniform(-1.0, 1.0, 1)
+            offspring_crossover[idx, gene_idx] = offspring_crossover[idx, gene_idx] + random_value
+            gene_idx = gene_idx + mutations_counter
+    return offspring_crossover
+
+
+# In[14]:
+
+
+mutations_counter = np.uint8(offspring_crossover.shape[1] / 1)
+mutations_counter
+for idx in range(offspring_crossover.shape[0]):
+        gene_idx = mutations_counter - 1
+        for mutation_num in range(1):
+            # The random value to be added to the gene.
+            random_value = np.random.uniform(-1.0, 1.0, 1)
+            offspring_crossover[idx, gene_idx] = offspring_crossover[idx, gene_idx] + random_value
+            gene_idx = gene_idx + mutations_counter
+        
+offspring_crossover
+
+
+# ### Corriendo el algoritmo
+
+# In[15]:
+
+
+best_outputs = []
+num_generations = 15
+num_parents_mating = 4 #La cantidad de padres que son tomados de cada generación
+
+for generation in range(num_generations):
+    print("Generation : ", generation)
+    # Measuring the fitness of each chromosome in the population.
+    fitness = pop_fitness(equation_inputs, new_population)
+    print("Fitness")
+    print(fitness)
+
+    best_outputs.append(np.max(np.sum(new_population*equation_inputs, axis=1)))
+    # The best result in the current iteration.
+    print("Best result : ", np.max(np.sum(new_population*equation_inputs, axis=1)))
+    
+    # Selecting the best parents in the population for mating.
+    parents = select_mating_pool(new_population, fitness,num_parents_mating)
+    print("Parents")
+    print(parents)
+
+    # Generating next generation using crossover.
+    offspring_crossover = crossover(parents,offspring_size=(pop_size[0]-parents.shape[0], num_alpha))
+    print("Crossover")
+    print(offspring_crossover)
+
+    # Adding some variations to the offspring using mutation.
+    offspring_mutation = mutation(offspring_crossover, num_mutations=1)
+    print("Mutation")
+    print(offspring_mutation)
+
+    # Creating the new population based on the parents and offspring.
+    new_population[0:parents.shape[0], :] = parents
+    new_population[parents.shape[0]:, :] = offspring_mutation
+    
+# Getting the best solution after iterating finishing all generations.
+#At first, the fitness is calculated for each solution in the final generation.
+fitness = pop_fitness(equation_inputs, new_population)
+# Then return the index of that solution corresponding to the best fitness.
+best_match_idx = np.where(fitness == np.max(fitness))
+
+print("Best solution : ", new_population[best_match_idx, :])
+print("Best solution fitness : ", fitness[best_match_idx])
+
+
+# In[16]:
+
+
 agente.next_move(tablero = [['x', '.', 'o'], ['.', 'x', '.'], ['x', 'x', '.']], competidor = "o", jugador = "x", 
-                 ponderaciones = [1,2,3])
+                 ponderaciones = new_population[best_match_idx, :][0][0])
+
+
+# In[ ]:
+
+
+
 
