@@ -3,6 +3,8 @@
 
 # <h1> <center> Práctica Metaheurísticas </center> </h1> 
 # 
+# <h2> <center> Alumnos: Florencia Ludueña, Paula Luvini, Facundo Marconi </center> </h2> 
+# 
 # El objetivo de esta práctica es lograr un agente que juegue (bien) al TaTeTi, entrenado mediante un algoritmo genético.
 # En este caso la población será un conjunto de agentes que competirán entre sí. Cada individuo será un agente que, básicamente, debe responder a la pregunta “¿Cuál es tu próxima jugada?”
 
@@ -11,24 +13,29 @@
 
 import random
 import numpy as np
+import pandas as pd
+random.seed(10)
 
 
 # ### Características
 # 
-# 1. Definir las características que conformarán la función de evaluación de los agentes:
+# 1. Definir las características que conformarán la función de evaluación de los agentes. Estas van a cambiar según el tateti que estemos tratando:
 # 
-#     1- Cantidad de grupos de 2 cruces consecutivas por fila/columna<br>
-#     2- Ganadores: que completan fila, columna o diagonal<br>
-#     3- Que evitan que el otro rellene su linea<br>
-#     4- Cantidad de jugadas del tablero<br>
-#     5- Cantidad de grupos de 2 círculos consecutivas por fila/columna
+#     1- Cantidad de grupos de 2 cruces por fila/columna<br>
+#     2- Cantidad de grupos de 3 cruces por fila/columna (solo en el tateti de 5x5)<br>
+#     3- Cantidad de grupos de 4 cruces por fila/columna (solo en el tateti de 5x5)<br>
+#     4- Ganadores: que completan fila, columna o diagonal<br>
+#     5- Que evitan que el otro rellene su linea<br>
 
 # ## Algoritmo Genético
 # 
-# Acá voy a desarrollar un algoritmo genético basado en el que encontramos acá: https://github.com/ahmedfgad/GeneticAlgorithmPython/tree/master/Tutorial%20Project
+# Como principal material bibliográfico, además de las notas de clase tomamos los siguientes posts:
+# 
+# * https://github.com/ahmedfgad/GeneticAlgorithmPython/tree/master/Tutorial%20Project
 # https://towardsdatascience.com/genetic-algorithm-explained-step-by-step-65358abe2bf
 # 
-# En un segundo paso deberíamos crear más funciones de fitness, agregarle criterios de selección, etc. como la consigna requiere.
+# * https://towardsdatascience.com/genetic-algorithm-explained-step-by-step-65358abe2bf
+# 
 
 # ### Definición de Funciones
 
@@ -179,69 +186,36 @@ def mutation(offspring_crossover):
     return offspring_crossover
 
 
-# ### Población inicial
+# ### Ta-te-ti 3x3
+
+# #### Corriendo el algoritmo
+
+# Para elegir el algoritmo final miramos las dos funciones de fitness anteriormente mencionadas y las dos de selección. La segunda función de fitness, que incorpora la característica "ganadora" en términos cuadráticos la descartamos porque no performa muy bien, nos desvía el fitness a valores muy altos y no vemos una mejoría general en los agentes. 
 # 
-# La población inicial van a ser distintos agentes cuya diferencia entre sí va a estar definida por los *alpha* que cada uno tenga. 
+# Respecto a la selección, la selección 1 también es mejor. En ella sólo pasan a la generación de padres los mejores valores.
+# 
+# También probamos con un crossover que cambiaba dos características entre genes y otro que cambiaba sólo 1 y al azar. Este último funcionó mejor y fue el elegido.
+# 
+# Los gráficos a continuación son de algunos resultados viejos que descartamos:
+
+# ![grafico1.png](attachment:grafico1.png)
+
+# ![grafico2.png](attachment:grafico2.png)
+
+# ![grafico2.png](attachment:grafico2.png)
 
 # In[9]:
 
 
-#Creamos la población inicial, con los distintos alfa para las distintas características
-
-num_alpha = 3 #Esto va a depender de la cantidad de características que definamos
-agents = 20 # Definimos el tamaño de la población.
-population_size = (agents,num_alpha) 
-population_zero = np.random.uniform(low=0, high=5.0,size=population_size)
-print(population_zero)
-
-#Creamos los puntajes correspondientes a las 3 características
-#1- Cantidad de grupos de 2 cruces consecutivas #Dos por fila/columna
-#2- Ganadores: que completan fila, columna o diagonal
-#3- Que evitan que el otro rellene su linea
-#4- Cantidad de jugadas del tablero
-#5- Cantidad de grupos de 2 círculos consecutivas por fila/columna
-caracteristicas = [10,50,50]#,15,-10]
-
-
-# ### Corriendo el algoritmo
-
-# In[10]:
-
-
-# Fitness 1 y select sorted
-# Best solution :  [[[1.77039356 4.23467875 7.68155172]]]
-# Best solution fitness :  [459.88442493]
-
-# Fitness 1 y select mix
-# Best solution :  [[[-0.88903542  4.3231201   9.41263685]]]
-# Best solution fitness :  [489.64475622]
-
-# Fitness 2  y select sorted
-# Best solution :  [[[ 1.0715854   4.78466731 10.46561068]]]
-# Best solution fitness :  [586.81058118]
-
-# Fitness 2  y select mix
-# Best solution :  [[[ 2.88305206  3.86156895 11.10734357]]]
-# Best solution fitness :  [570.04099011]
-
-
-# ### Definiendo al agente
-
-# Un agente será una clase en Python que pueda responder a un método next_move(tablero). Dicho método tomará un tablero de TaTeTi con las jugadas realizadas hasta el momento y deberá devolver un número de fila y un número de columna (las filas se enumeran desde 1 contando desde arriba y las columnas también desde 1 contando desde la izquierda), que indica en qué casillero se hará su próxima jugada.
-# 
-# El tablero estará representado por una lista de listas. Cada lista representará una fila del tablero y contendrá en sus posiciones alguno de los siguientes 3 caracteres: “.”, que representa una casilla vacía. “x” que representa una jugada del jugador Cruz. “o” que representa una jugada del Círculo.
-
-# In[11]:
-
-
 class algoritmo():
-    def train():
+    
+    def __init__(self):
 
         #Creamos la población inicial, con los distintos alfa para las distintas características
         num_alpha = 3 #Esto va a depender de la cantidad de características que definamos
         agents = 500 # Definimos el tamaño de la población.
         population_size = (agents,num_alpha) 
-        new_population = np.random.uniform(low=0, high=5.0,size=population_size)
+        new_population = np.random.uniform(low=0, high=6.0,size=population_size)
 
         #Creamos los puntajes correspondientes a las 3 características
         #1- Cantidad de grupos de 2 cruces consecutivas #Dos por fila/columna
@@ -251,22 +225,24 @@ class algoritmo():
         
         #ALGORITMO GENETICO
         best_outputs = []
-        num_generations = 15
+        num_generations = 30
         num_parents_mating = 100 #La cantidad de padres que son tomados de cada generación
         
+        self.fitness_list = []
         for generation in range(num_generations):
             print("Generacion: ", generation)
-            fitness = fitness_v1(equation_inputs = caracteristicas, population = new_population)#,count_jugadas= nro_jugada)
-
+            fitness = fitness_v1(caracteristicas, new_population)#,count_jugadas= nro_jugada)
+            self.fitness_list.append(fitness_v1(caracteristicas, new_population))
+            
             # Mostramos el mejor resultado
             best_outputs.append(np.max(fitness))
             print("Mejor resultado: ", np.max(fitness))
     
             # Usamos la función de selección ordenada
-            parents = select_mating_random(new_population, fitness,num_parents_mating)
+            parents = select_mating_sort(new_population, fitness,num_parents_mating)
 
             # Realizamos el crossover.
-            offspring_crossover = crossover(parents,offspring_size=(population_size[0]-parents.shape[0], num_alpha))
+            offspring_crossover = crossover_last(parents,offspring_size=(population_size[0]-parents.shape[0], num_alpha))
 
             # Cambiamos algunos genes por mutacion
             offspring_mutation = mutation(offspring_crossover)
@@ -282,14 +258,58 @@ class algoritmo():
 
         #print("Best solution : ", new_population[best_match_idx, :])
         #print("Best solution fitness : ", fitness[best_match_idx])
-        ponderaciones = new_population[best_match_idx, :][0][0]
+        self.ponderaciones = new_population[best_match_idx, :][0][0]
         
-        return ponderaciones
+    
+    def plot(self):
+        return self.fitness_list
+    
+    def alphas(self):        
+        return self.ponderaciones
 
 
-# ### Ta-te-ti 3x3
+# In[10]:
+
+
+train = algoritmo()
+
+
+# In[11]:
+
+
+#Traigo el grafico y chequeo
+grafico = train.plot()
+
 
 # In[12]:
+
+
+xs = []
+for i in range(30):
+    a = []
+    for x in range(500):
+        a.append(i)
+    xs.append(a)
+
+
+# In[13]:
+
+
+from matplotlib import pyplot as plt
+plt.scatter(x = xs, y =grafico)
+plt.title("Funcion fitness 1 y seleccion 1")
+plt.xlabel("Generaciones")
+plt.ylabel("Fitness")
+plt.show()
+
+
+# ### Definiendo al agente
+
+# Un agente será una clase en Python que pueda responder a un método next_move(tablero). Dicho método tomará un tablero de TaTeTi con las jugadas realizadas hasta el momento y deberá devolver un número de fila y un número de columna (las filas se enumeran desde 1 contando desde arriba y las columnas también desde 1 contando desde la izquierda), que indica en qué casillero se hará su próxima jugada.
+# 
+# El tablero estará representado por una lista de listas. Cada lista representará una fila del tablero y contendrá en sus posiciones alguno de los siguientes 3 caracteres: “.”, que representa una casilla vacía. “x” que representa una jugada del jugador Cruz. “o” que representa una jugada del Círculo.
+
+# In[14]:
 
 
 class agente():
@@ -298,7 +318,7 @@ class agente():
         #Primero lo que voy a hacer es buscar el primer lugar vacio y completarlo con mi jugador. 
         #Luego guardo ese tablero y voy a generar un nuevo tablero con el segundo lugar vacio, asi de manera de tener todos los tableros existentes posibles en una jugada. 
         #Luego evaluo con mis caracteristicas (hasta ahora puse 3) a los tableros y me quedo con la mejor jugada.
-        ponderaciones = algoritmo.train()
+        ponderaciones = train.alphas()
         caracteristicas = [10,50,30]
         vacio = "."
         jugador = "x"
@@ -416,10 +436,34 @@ class agente():
         return jugada
 
 
-# In[13]:
+# ### Simulo una partida. 
+
+# In[15]:
 
 
-agente.next_move(tablero = [['o', 'x', 'x'], ['o', '.', 'o'], ['x', 'o', '.']])
+#Juego (2,2)
+agente.next_move(tablero = [['.', 'o', '.'], ['.', '.', '.'], ['.', '.', '.']])
+
+
+# In[16]:
+
+
+#Juego (1,3)
+agente.next_move(tablero = [['x', '.', 'o'], ['.', 'o', '.'], ['.', '.', '.']])
+
+
+# In[17]:
+
+
+#Juego (2,1)
+agente.next_move(tablero = [['x', '.', 'o'], ['o', 'o', '.'], ['x', '.', '.']])
+
+
+# In[18]:
+
+
+#Juego (1,2)
+agente.next_move(tablero = [['x', 'o', 'o'], ['o', 'o', 'x'], ['x', '.', '.']])
 
 
 # ### Ta-te-ti 5x5
@@ -431,12 +475,35 @@ agente.next_move(tablero = [['o', 'x', 'x'], ['o', '.', 'o'], ['x', 'o', '.']])
 # * Filas/columnas/diagonales con 4 cruces y el resto de espacios vacíos.
 # * Filas/columnas/diagonales con 5 cruces.
 # * Evitar que el otro jugador rellene su línea.
+# 
+# 
+# También realizamos un análisis como en el tateti de 3x3 y concluimos que la mejor función de fitness es la 1, la selección es mejor cuando obtenemos a los mejores y en el crossover solo cambiamos 1 característica al azar.
 
-# In[14]:
+# ![grafico5.png](attachment:grafico5.png)
+
+# In[19]:
+
+
+#Probamos también cambiando solo 1 característica al azar
+
+def crossover_last(parents, offspring_size):
+    offspring = np.empty(offspring_size)
+    crossover_point = random.choice(np.arange(1,5))
+
+    for k in range(offspring_size[0]):
+        parent1_idx = k%parents.shape[0]
+        parent2_idx = (k+1)%parents.shape[0]
+        offspring[k, 0:crossover_point] = parents[parent1_idx, 0:crossover_point]
+        offspring[k, crossover_point:] = parents[parent2_idx, crossover_point:]
+        
+    return offspring
+
+
+# In[20]:
 
 
 class algoritmo():
-    def train():
+    def __init__(self):
 
         #Creamos la población inicial, con los distintos alfa para las distintas características
         num_alpha = 5 #Esto va a depender de la cantidad de características que definamos
@@ -452,22 +519,24 @@ class algoritmo():
         
         #ALGORITMO GENETICO
         best_outputs = []
-        num_generations = 15
+        num_generations = 35
         num_parents_mating = 100 #La cantidad de padres que son tomados de cada generación
         
+        self.fitness_list = []
         for generation in range(num_generations):
             print("Generacion: ", generation)
             fitness = fitness_v1(equation_inputs = caracteristicas, population = new_population)#,count_jugadas= nro_jugada)
-
+            self.fitness_list.append(fitness_v1(caracteristicas, new_population))
+            
             # Mostramos el mejor resultado
             best_outputs.append(np.max(fitness))
             print("Mejor resultado: ", np.max(fitness))
     
             # Usamos la función de selección ordenada
-            parents = select_mating_random(new_population, fitness,num_parents_mating)
+            parents = select_mating_sort(new_population, fitness,num_parents_mating)
 
             # Realizamos el crossover.
-            offspring_crossover = crossover(parents,offspring_size=(population_size[0]-parents.shape[0], num_alpha))
+            offspring_crossover = crossover_last(parents,offspring_size=(population_size[0]-parents.shape[0], num_alpha))
 
             # Cambiamos algunos genes por mutacion
             offspring_mutation = mutation(offspring_crossover)
@@ -483,12 +552,57 @@ class algoritmo():
 
         #print("Best solution : ", new_population[best_match_idx, :])
         #print("Best solution fitness : ", fitness[best_match_idx])
-        ponderaciones = new_population[best_match_idx, :][0][0]
-        
-        return ponderaciones
+        self.ponderaciones = new_population[best_match_idx, :][0][0]
+    
+    def plot(self):
+        return self.fitness_list
+    
+    def alphas(self):
+        return self.ponderaciones
 
 
-# In[15]:
+# In[21]:
+
+
+train = algoritmo()
+
+
+# In[22]:
+
+
+#Traigo el grafico y chequeo
+grafico = train.plot()
+
+
+# In[23]:
+
+
+xs = []
+for i in range(35):
+    a = []
+    for x in range(500):
+        a.append(i)
+    xs.append(a)
+
+
+# In[24]:
+
+
+from matplotlib import pyplot as plt
+plt.scatter(x = xs, y =grafico)
+plt.title("Funcion fitness 1 y seleccion 1")
+plt.xlabel("Generaciones")
+plt.ylabel("Fitness")
+plt.show()
+
+
+# In[25]:
+
+
+train.alphas()
+
+
+# In[26]:
 
 
 class agente():
@@ -497,7 +611,7 @@ class agente():
         #Primero lo que voy a hacer es buscar el primer lugar vacio y completarlo con mi jugador. 
         #Luego guardo ese tablero y voy a generar un nuevo tablero con el segundo lugar vacio, asi de manera de tener todos los tableros existentes posibles en una jugada. 
         #Luego evaluo con mis caracteristicas a los tableros y me quedo con la mejor jugada.
-        ponderaciones = algoritmo.train()
+        ponderaciones = train.alphas()
         print(ponderaciones)
         caracteristicas = [10,20,30,60,50]
         
@@ -630,72 +744,78 @@ class agente():
         return jugada
 
 
-# In[16]:
+# ### Simulo una partida
+
+# In[27]:
 
 
+#Juego (3,3)
+agente.next_move(tablero = [['.', '.', '.', '.', '.'], ['.', '.', '.', '.','.'], ['.', '.', 'o', '.','.'],
+                                ['.', '.', '.', '.', '.'],['.', '.', '.', '.', '.']])
+
+
+# In[28]:
+
+
+#Juego (2,4)
+agente.next_move(tablero = [['x', '.', '.', '.', '.'], ['.', '.', '.', 'o','.'], ['.', '.', 'o', '.','.'],
+                                ['.', '.', '.', '.', '.'],['.', '.', '.', '.', '.']])
+
+
+# In[29]:
+
+
+#Juego (1,5)
+agente.next_move(tablero = [['x', 'x', '.', '.', 'o'], ['.', '.', '.', 'o','.'], ['.', '.', 'o', '.','.'],
+                                ['.', '.', '.', '.', '.'],['.', '.', '.', '.', '.']])
+
+
+# In[30]:
+
+
+#Juego (5,1)
+agente.next_move(tablero = [['x', 'x', '.', '.', 'o'], ['x', '.', '.', 'o','.'], ['.', '.', 'o', '.','.'],
+                                ['.', '.', '.', '.', '.'],['o', '.', '.', '.', '.']])
+
+
+# In[31]:
+
+
+#Juego (3,1)
+agente.next_move(tablero = [['x', 'x', '.', '.', 'o'], ['x', '.', '.', 'o','.'], ['o', '.', 'o', '.','.'],
+                                ['.', 'x', '.', '.', '.'],['o', '.', '.', '.', '.']])
+
+
+# In[32]:
+
+
+#Juego (3,2)
+agente.next_move(tablero = [['x', 'x', '.', '.', 'o'], ['x', '.', '.', 'o','.'], ['o', 'o', 'o', '.','.'],
+                                ['x', 'x', '.', '.', '.'],['o', '.', '.', '.', '.']])
+
+
+# In[33]:
+
+
+#Juego (3,4)
+agente.next_move(tablero = [['x', 'x', '.', '.', 'o'], ['x', '.', '.', 'o','.'], ['o', 'o', 'o', 'o','.'],
+                                ['x', 'x', 'x', '.', '.'],['o', '.', '.', '.', '.']])
+
+
+# In[34]:
+
+
+#Juego (4,4)
+agente.next_move(tablero = [['x', 'x', '.', '.', 'o'], ['x', '.', '.', 'o','.'], ['o', 'o', 'o', 'o','x'],
+                                ['x', 'x', 'x', 'o', '.'],['o', '.', '.', '.', '.']])
+
+
+# In[35]:
+
+
+#Juego (1,4)
 agente.next_move(tablero = [['x', 'x', 'x', 'o', 'o'], ['x', '.', '.', 'o','.'], ['o', 'o', 'o', 'o','x'],
                                 ['x', 'x', 'x', 'o', '.'],['o', '.', '.', '.', '.']])
 
 
-# In[17]:
-
-
-#BORRADORES ACA ABAJOOO
-
-
-# In[18]:
-
-
-#from itertools import permutations, cycle, islice
-    
-#idx = [list(islice(cycle([0,1, 2, 3,4]), i, i+4)) for i in range(len([0,1, 2, 3, 4]))][:-3]
-#idx
-#grupos = []
-#for r in range(len(a)):
-#    for i in idx:
-#        grupos.append(a[r][i[0]:(i[2]+1)])
-#print(grupos)
-#occurences1 = []
-#for g in range(len(a)):
-#    occurences1.append(a[g].count("x") == 3 and a[g].count(".") == 2)
-#    print(a[g])
-#sum(occurences1)
-
-
-# In[19]:
-
-
-#grupos = []
-#idx = [0,1,2,3,4]
-#for r in range(len(a)):
-#    g = []
-#    for l in range(5):
-#        g.append(a[l][r])
-#    grupos.append(g)
-       
-#print(grupos)
-
-#occurences2 = []
-#for g in range(len(grupos)):
-#    occurences2.append(grupos[g].count("x") == 4)
-#sum(occurences2)
-
-
-# In[20]:
-
-
-#grupo2_diag = a[4][0], a[3][1],a[2][2], a[1][3],a[0][4]
-#c = []
-#c.append(grupo2_diag.count("x") == 4 and grupo2_diag.count(".") == 1)
-
-
-# In[21]:
-
-
-#grupo_diag = []
-#c = []
-#for i in range(5):
-#    grupo_diag.append(a[i][i])
-#c.append(grupo_diag.count("x") == 5)
-#print(c)
-
+# Como comentario final y evaluando las partidas finales, creemos que puede mejorarse el algoritmo si agregamos alguna característica que evite tanta aleatoriedad en las primeras jugadas del agente. Si bien funciona bastante bien evitando que el otro jugador gane, a veces que al inicio del juego las características no den tanto puntaje puede llegar a ser perjudicial para el jugador. Si bien no llegamos a agregarlas para este tp, nos percatamos de que podemos agregar alguna característica por ese lado.
